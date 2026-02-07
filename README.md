@@ -184,33 +184,47 @@ export ZSH_EZA_THEME_MODE=auto            # Auto-detect (default)
 
 ### zstyle Configuration
 
-Customize eza behavior using zstyle (similar to Oh My Zsh):
+Customize eza behavior using zstyle with the `:zsh-eza` context pattern:
 
 ```zsh
 # Show group information (default: yes)
-zstyle ':eza:*' 'show-group' yes
+zstyle ':zsh-eza' 'show-group' yes
 
 # Show header row (default: yes)
-zstyle ':eza:*' 'header' yes
+zstyle ':zsh-eza' 'header' yes
 
 # Icon display mode (default: auto)
 # Options: auto, always, never
-zstyle ':eza:*' 'icons' auto
+zstyle ':zsh-eza' 'icons' auto
 
 # Show git status (default: yes)
-zstyle ':eza:*' 'git-status' yes
+zstyle ':zsh-eza' 'git-status' yes
 
 # Time style (default: relative)
 # Options: default, iso, long-iso, full-iso, relative
-zstyle ':eza:*' 'time-style' relative
+zstyle ':zsh-eza' 'time-style' relative
 
 # Group directories first (default: yes)
-zstyle ':eza:*' 'group-directories-first' yes
+zstyle ':zsh-eza' 'dirs-first' yes           # Short form (recommended)
+# OR
+zstyle ':zsh-eza' 'group-directories-first' yes    # Long form (also works)
 
 # Color mode (default: auto)
 # Options: auto, always, never
-zstyle ':eza:*' 'color' auto
+zstyle ':zsh-eza' 'color' auto
 ```
+
+#### Available Options
+
+| Option | Type | Default | Values | Flag |
+|--------|------|---------|--------|------|
+| `show-group` | boolean | yes | yes/no | `-g` |
+| `header` | boolean | yes | yes/no | `-h` |
+| `icons` | string | auto | auto/always/never | `--icons` |
+| `git-status` | boolean | yes | yes/no | `--git` |
+| `dirs-first` or `group-directories-first` | boolean | yes | yes/no | `--group-directories-first` |
+| `time-style` | string | relative | default/iso/long-iso/full-iso/relative | `--time-style` |
+| `color` | string | auto | auto/always/never | `--color` |
 
 ## Comparison with Oh My Zsh Plugin
 

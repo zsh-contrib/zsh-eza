@@ -37,38 +37,39 @@ _zsh_eza_configure_opts() {
     _EZA_TAIL=()
 
     # Show group information (default: yes)
-    if zstyle -T ':eza:*' 'show-group'; then
+    if zstyle -T ':zsh-eza' 'show-group'; then
         _EZA_HEAD+=(g)
     fi
 
     # Show header row (default: yes)
-    if zstyle -T ':eza:*' 'header'; then
+    if zstyle -T ':zsh-eza' 'header'; then
         _EZA_HEAD+=(h)
     fi
 
     # Icons setting (default: auto)
     local icons_mode
-    zstyle -s ':eza:*' 'icons' icons_mode || icons_mode='auto'
+    zstyle -s ':zsh-eza' 'icons' icons_mode || icons_mode='auto'
     _EZA_TAIL+=(--icons="${icons_mode}")
 
     # Git status (default: yes)
-    if zstyle -T ':eza:*' 'git-status'; then
+    if zstyle -T ':zsh-eza' 'git-status'; then
         _EZA_TAIL+=(--git)
     fi
 
     # Time style (default: relative)
     local time_style
-    zstyle -s ':eza:*' 'time-style' time_style || time_style='relative'
+    zstyle -s ':zsh-eza' 'time-style' time_style || time_style='relative'
     _EZA_TAIL+=(--time-style="${time_style}")
 
-    # Group directories first (default: yes)
-    if zstyle -T ':eza:*' 'group-directories-first'; then
+    # Group directories first (default: yes) - support both option names
+    if zstyle -T ':zsh-eza' 'dirs-first' || \
+       zstyle -T ':zsh-eza' 'group-directories-first'; then
         _EZA_TAIL+=(--group-directories-first)
     fi
 
     # Color setting (default: auto)
     local color_mode
-    zstyle -s ':eza:*' 'color' color_mode || color_mode='auto'
+    zstyle -s ':zsh-eza' 'color' color_mode || color_mode='auto'
     _EZA_TAIL+=(--color="${color_mode}")
 }
 
@@ -84,9 +85,18 @@ _alias_eza() {
     # Build the command
     local cmd="eza"
 
-    # Add flags if present
+    # Combine HEAD flags with provided flags
+    local combined_flags=""
+    if (( ${#_EZA_HEAD[@]} > 0 )); then
+        combined_flags="${(j::)_EZA_HEAD}"  # Join without separator
+    fi
     if [[ -n "$eza_flags" ]]; then
-        cmd="${cmd} -${eza_flags}"
+        combined_flags="${combined_flags}${eza_flags}"
+    fi
+
+    # Add combined flags if present
+    if [[ -n "$combined_flags" ]]; then
+        cmd="${cmd} -${combined_flags}"
     fi
 
     # Add tail options
