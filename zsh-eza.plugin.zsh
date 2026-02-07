@@ -151,8 +151,8 @@ if [[ -n "$TMUX" ]]; then
   fi
 fi
 
-export EZA_THEME_DIR="${0:A:h}/themes"
+export EZA_THEME_DIR="${0:A:h}/themes/$EZA_THEME"
 # Load theme file
-if [[ -d "$EZA_THEME_DIR/$EZA_THEME" ]]; then
-    export EZA_CONFIG_DIR="$EZA_THEME_DIR/$EZA_THEME"
+if [[ -d "$EZA_THEME_DIR" ]]; then
+    export EZA_CONFIG_DIR="$EZA_THEME_DIR"
 fi
