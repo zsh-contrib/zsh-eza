@@ -153,6 +153,6 @@ fi
 
 export EZA_THEME_DIR="${0:A:h}/themes"
 # Load theme file
-if [[ -f "$EZA_THEME_DIR/$EZA_THEME" ]]; then
+if [[ -d "$EZA_THEME_DIR/$EZA_THEME" ]]; then
     export EZA_CONFIG_DIR="$EZA_THEME_DIR/$EZA_THEME"
 fi
