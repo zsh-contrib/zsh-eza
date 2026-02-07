@@ -84,10 +84,24 @@ Before submitting a PR, ensure:
 
 3. Update `themes/README.md` with theme information
 
-4. Test theme switching:
+4. Test theme installation and switching:
    ```bash
+   # Source plugin to install themes
+   source ./zsh-eza.plugin.zsh
+
+   # Verify theme was installed
+   ls ~/.config/eza/themes/THEME_NAME/theme.yml
+
+   # Switch to theme
    eza-theme THEME_NAME
-   ls -l  # Verify colors work
+
+   # Verify colors work
+   ls -l
+   ```
+
+5. Test with custom `EZA_CONFIG_DIR`:
+   ```bash
+   EZA_CONFIG_DIR="/tmp/test" zsh -c "source ./zsh-eza.plugin.zsh && eza-theme THEME_NAME"
    ```
 
 ## Adding New Features

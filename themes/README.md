@@ -21,6 +21,32 @@ An elegant theme inspired by natural pine forests.
 - **rose-pine-dawn** (light) - Gentle light theme with soft pastels
 - **rose-pine-moon** (dark) - Muted dark variant with subtle colors
 
+## Theme Storage
+
+When you first load the plugin, all bundled themes are automatically installed to your eza config directory:
+
+```
+~/.config/eza/themes/
+├── catppuccin-mocha/
+│   └── theme.yml
+├── catppuccin-latte/
+│   └── theme.yml
+├── rose-pine/
+│   └── theme.yml
+└── ...
+```
+
+The active theme is symlinked at `~/.config/eza/theme.yml`.
+
+### Custom Config Directory
+
+You can customize the theme installation location by setting the `EZA_CONFIG_DIR` environment variable:
+
+```zsh
+export EZA_CONFIG_DIR="$HOME/.eza"
+# Themes will be installed to ~/.eza/themes/
+```
+
 ## Usage
 
 ### List Available Themes
@@ -73,13 +99,38 @@ eza-theme catppuccin-latte
 
 ## Custom Themes
 
-You can use custom themes by placing your own `theme.yml` file at:
+### Option 1: Customize an Installed Theme
 
-```
-~/.config/eza/theme.yml
+After installing, you can modify any theme directly:
+
+```bash
+# Edit the rose-pine theme
+vim ~/.config/eza/themes/rose-pine/theme.yml
+
+# Switch to it to see your changes
+eza-theme rose-pine
 ```
 
-If you have a custom theme, the plugin will back it up before switching to a bundled theme. The backup will be saved as:
+Your customizations will persist across plugin updates.
+
+### Option 2: Create Your Own Theme
+
+Create a new theme directory:
+
+```bash
+mkdir -p ~/.config/eza/themes/my-theme
+vim ~/.config/eza/themes/my-theme/theme.yml
+```
+
+Then switch to it:
+
+```zsh
+eza-theme my-theme
+```
+
+### Option 3: Use a Custom theme.yml
+
+Place your theme directly at `~/.config/eza/theme.yml`. The plugin will back it up before switching to a bundled theme:
 
 ```
 ~/.config/eza/theme.yml.backup.<timestamp>

@@ -126,12 +126,189 @@ fi
 # Clean up helper function
 unfunction _alias_eza
 
-# Load theme manager
-if [[ -f "${ZSH_EZA_DIR}/lib/theme-manager.zsh" ]]; then
-    source "${ZSH_EZA_DIR}/lib/theme-manager.zsh"
+# ============================================================================
+# Theme Management
+# ============================================================================
 
-    # Auto-detect and apply theme if enabled
-    if [[ "$ZSH_EZA_AUTO_THEME" == "true" ]]; then
-        _zsh_eza_auto_theme
+# Get the eza config directory (respects EZA_CONFIG_DIR)
+_zsh_eza_config_dir() {
+    echo "${EZA_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/eza}"
+}
+
+# Install bundled themes to user's config directory
+_zsh_eza_install_themes() {
+    local config_dir="$(_zsh_eza_config_dir)"
+    local themes_dir="${config_dir}/themes"
+    local source_dir="${ZSH_EZA_DIR}/themes"
+
+    # Create themes directory if needed
+    if [[ ! -d "$themes_dir" ]]; then
+        mkdir -p "$themes_dir" 2>/dev/null || return 1
     fi
+
+    # Install each bundled theme to its own subdirectory
+    for theme_file in "$source_dir"/*.yml(N); do
+        local theme_name="${theme_file:t:r}"
+        local theme_subdir="${themes_dir}/${theme_name}"
+        local target_file="${theme_subdir}/theme.yml"
+
+        # Skip README.md
+        [[ "$theme_name" == "README" ]] && continue
+
+        # Create theme subdirectory
+        if [[ ! -d "$theme_subdir" ]]; then
+            mkdir -p "$theme_subdir" 2>/dev/null || continue
+        fi
+
+        # Copy theme file if it doesn't exist or is outdated
+        if [[ ! -f "$target_file" ]] || [[ "$theme_file" -nt "$target_file" ]]; then
+            cp "$theme_file" "$target_file" 2>/dev/null
+        fi
+    done
+}
+
+# List available bundled themes
+eza-themes-list() {
+    local config_dir="$(_zsh_eza_config_dir)"
+    local themes_dir="${config_dir}/themes"
+
+    if [[ ! -d "$themes_dir" ]]; then
+        print "zsh-eza: themes directory not found at ${themes_dir}" >&2
+        print "Run 'source ~/.zshrc' to reinstall themes" >&2
+        return 1
+    fi
+
+    print "Available eza themes:\n"
+
+    # Catppuccin themes
+    print "Catppuccin:"
+    for theme_dir in "$themes_dir"/catppuccin-*(N/); do
+        local name="${theme_dir:t}"
+        local variant="${name#catppuccin-}"
+        if [[ "$variant" == "latte" ]]; then
+            print "  - $name (light)"
+        else
+            print "  - $name (dark)"
+        fi
+    done
+
+    print "\nRose Pine:"
+    for theme_dir in "$themes_dir"/rose-pine*(N/); do
+        local name="${theme_dir:t}"
+        if [[ "$name" == "rose-pine-dawn" ]]; then
+            print "  - $name (light)"
+        else
+            print "  - $name (dark)"
+        fi
+    done
+
+    print "\nUsage: eza-theme <theme-name>"
+    print "Example: eza-theme catppuccin-mocha"
+    print "\nThemes are stored in: ${themes_dir}"
+}
+
+# Switch to a theme
+eza-theme() {
+    local theme_name="$1"
+
+    if [[ -z "$theme_name" ]]; then
+        print "Usage: eza-theme <theme-name>" >&2
+        print "Run 'eza-themes-list' to see available themes" >&2
+        return 1
+    fi
+
+    local config_dir="$(_zsh_eza_config_dir)"
+    local theme_dir="${config_dir}/themes/${theme_name}"
+    local theme_file="${theme_dir}/theme.yml"
+    local active_theme="${config_dir}/theme.yml"
+
+    # Check if theme exists
+    if [[ ! -f "$theme_file" ]]; then
+        print "zsh-eza: theme '${theme_name}' not found at ${theme_file}" >&2
+        print "Run 'eza-themes-list' to see available themes" >&2
+        return 1
+    fi
+
+    # Create config directory if it doesn't exist
+    if [[ ! -d "$config_dir" ]]; then
+        mkdir -p "$config_dir" 2>/dev/null || {
+            print "zsh-eza: failed to create config directory: $config_dir" >&2
+            return 1
+        }
+    fi
+
+    # Backup existing theme if present and not a symlink
+    if [[ -f "$active_theme" ]] && [[ ! -L "$active_theme" ]]; then
+        local backup_file="${active_theme}.backup.$(date +%s)"
+        mv "$active_theme" "$backup_file" 2>/dev/null
+        print "zsh-eza: backed up existing theme to ${backup_file}"
+    fi
+
+    # Remove existing symlink if present
+    if [[ -L "$active_theme" ]]; then
+        rm "$active_theme" 2>/dev/null
+    fi
+
+    # Create symlink to theme
+    ln -sf "$theme_file" "$active_theme" 2>/dev/null || {
+        print "zsh-eza: failed to create symlink to theme" >&2
+        return 1
+    }
+
+    print "zsh-eza: switched to theme '${theme_name}'"
+}
+
+# Auto-detect light/dark mode and apply theme
+_zsh_eza_auto_theme() {
+    # Priority 1: Check if user specified a theme name explicitly
+    if [[ "$ZSH_EZA_THEME_MODE" != "auto" ]] && [[ "$ZSH_EZA_THEME_MODE" != "light" ]] && [[ "$ZSH_EZA_THEME_MODE" != "dark" ]]; then
+        # User specified a theme name directly
+        eza-theme "$ZSH_EZA_THEME_MODE" 2>/dev/null
+        return
+    fi
+
+    # Priority 2: Check TMUX (like zsh-fzf does)
+    if [[ -n "$TMUX" ]]; then
+        local tmux_theme="$(tmux display -p "#{client_theme}" 2>/dev/null)"
+        if [[ "$tmux_theme" == "light" ]]; then
+            eza-theme catppuccin-latte 2>/dev/null
+        else
+            eza-theme catppuccin-mocha 2>/dev/null
+        fi
+        return
+    fi
+
+    # Priority 3: Check macOS dark mode
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if defaults read -g AppleInterfaceStyle &>/dev/null; then
+            # Dark mode is enabled
+            eza-theme rose-pine 2>/dev/null
+        else
+            # Light mode or no preference
+            eza-theme rose-pine-dawn 2>/dev/null
+        fi
+        return
+    fi
+
+    # Priority 4: Use ZSH_EZA_THEME_MODE explicit light/dark setting
+    case "$ZSH_EZA_THEME_MODE" in
+        light)
+            eza-theme catppuccin-latte 2>/dev/null
+            ;;
+        dark)
+            eza-theme catppuccin-mocha 2>/dev/null
+            ;;
+        auto|*)
+            # Default to dark theme
+            eza-theme catppuccin-mocha 2>/dev/null
+            ;;
+    esac
+}
+
+# Install bundled themes to user's config directory
+_zsh_eza_install_themes
+
+# Auto-detect and apply theme if enabled
+if [[ "$ZSH_EZA_AUTO_THEME" == "true" ]]; then
+    _zsh_eza_auto_theme
 fi

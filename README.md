@@ -125,6 +125,25 @@ eza-theme catppuccin-mocha
 eza-theme rose-pine-dawn
 ```
 
+### Theme Storage
+
+Themes are automatically installed to your eza config directory when the plugin loads:
+
+```
+~/.config/eza/themes/
+├── catppuccin-mocha/theme.yml
+├── rose-pine/theme.yml
+└── ...
+```
+
+The active theme is symlinked at `~/.config/eza/theme.yml`.
+
+You can customize the installation location with the `EZA_CONFIG_DIR` environment variable:
+
+```zsh
+export EZA_CONFIG_DIR="$HOME/.eza"
+```
+
 ### Auto Theme Detection
 
 The plugin automatically detects your system's appearance and applies an appropriate theme:
@@ -241,20 +260,33 @@ lsd
 
 ## Advanced Usage
 
-### Custom Theme
+### Customize Themes
 
-Create your own theme at `~/.config/eza/theme.yml`:
+After installation, you can modify any theme:
 
-```yaml
-# Example custom theme
+```bash
+# Edit the installed rose-pine theme
+vim ~/.config/eza/themes/rose-pine/theme.yml
+
+# Switch to see your changes
+eza-theme rose-pine
+```
+
+Or create your own:
+
+```bash
+mkdir -p ~/.config/eza/themes/my-theme
+cat > ~/.config/eza/themes/my-theme/theme.yml << 'EOF'
 filekinds:
   normal: { foreground: white }
   directory: { foreground: blue, bold: true }
   executable: { foreground: green, bold: true }
-# ... see eza documentation for full format
+EOF
+
+eza-theme my-theme
 ```
 
-The plugin will back up your custom theme before switching to a bundled theme.
+See [eza theme documentation](https://github.com/eza-community/eza/blob/main/THEME.md) for the full format.
 
 ### Disable Auto-detection and Choose Manually
 
