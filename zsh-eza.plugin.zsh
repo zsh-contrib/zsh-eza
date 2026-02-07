@@ -41,8 +41,8 @@ _zsh_eza_configure_opts() {
         _EZA_HEAD+=(g)
     fi
 
-    # Show header row (default: yes)
-    if zstyle -T ':zsh-eza' 'header'; then
+    # Show header row (default: no)
+    if zstyle -t ':zsh-eza' 'header'; then
         _EZA_HEAD+=(h)
     fi
 
@@ -154,5 +154,5 @@ fi
 export EZA_THEME_DIR="${0:A:h}/themes"
 # Load theme file
 if [[ -f "$EZA_THEME_DIR/$EZA_THEME" ]]; then
-    export EZA_CONFIG_DIR="$EZX_THEME_DIR/$EZA_THEME"
+    export EZA_CONFIG_DIR="$EZA_THEME_DIR/$EZA_THEME"
 fi

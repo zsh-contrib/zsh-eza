@@ -94,8 +94,9 @@ All aliases include these sensible defaults:
 - `--icons=auto` - Icons for file types
 - `--git` - Git status indicators
 - `-g` - Show group ownership
-- `-h` - Human-readable sizes
 - `--time-style=relative` - Relative timestamps (e.g., "2 hours ago")
+
+To enable header row with column names, set: `zstyle ':zsh-eza' 'header' yes`
 
 ## Themes
 
@@ -187,31 +188,19 @@ export ZSH_EZA_THEME_MODE=auto            # Auto-detect (default)
 Customize eza behavior using zstyle with the `:zsh-eza` context pattern:
 
 ```zsh
-# Show group information (default: yes)
-zstyle ':zsh-eza' 'show-group' yes
+# Boolean options (use yes/no)
+zstyle ':zsh-eza' 'show-group' yes        # Show group information (default: yes)
+zstyle ':zsh-eza' 'header' yes            # Show header row (default: no)
+zstyle ':zsh-eza' 'git-status' yes        # Show git status (default: yes)
+zstyle ':zsh-eza' 'dirs-first' yes        # Group directories first (default: yes)
 
-# Show header row (default: yes)
-zstyle ':zsh-eza' 'header' yes
+# String options (use specific values, NOT yes/no)
+zstyle ':zsh-eza' 'icons' always          # Icon display: auto/always/never (default: auto)
+zstyle ':zsh-eza' 'time-style' relative   # Time format: default/iso/long-iso/full-iso/relative (default: relative)
+zstyle ':zsh-eza' 'color' auto            # Color mode: auto/always/never (default: auto)
 
-# Icon display mode (default: auto)
-# Options: auto, always, never
-zstyle ':zsh-eza' 'icons' auto
-
-# Show git status (default: yes)
-zstyle ':zsh-eza' 'git-status' yes
-
-# Time style (default: relative)
-# Options: default, iso, long-iso, full-iso, relative
-zstyle ':zsh-eza' 'time-style' relative
-
-# Group directories first (default: yes)
-zstyle ':zsh-eza' 'dirs-first' yes           # Short form (recommended)
-# OR
-zstyle ':zsh-eza' 'group-directories-first' yes    # Long form (also works)
-
-# Color mode (default: auto)
-# Options: auto, always, never
-zstyle ':zsh-eza' 'color' auto
+# Alternative long form for dirs-first (both work)
+zstyle ':zsh-eza' 'group-directories-first' yes
 ```
 
 #### Available Options
@@ -219,12 +208,14 @@ zstyle ':zsh-eza' 'color' auto
 | Option | Type | Default | Values | Flag |
 |--------|------|---------|--------|------|
 | `show-group` | boolean | yes | yes/no | `-g` |
-| `header` | boolean | yes | yes/no | `-h` |
-| `icons` | string | auto | auto/always/never | `--icons` |
+| `header` | boolean | **no** | yes/no | `-h` |
+| `icons` | **string** | auto | auto/always/never | `--icons` |
 | `git-status` | boolean | yes | yes/no | `--git` |
 | `dirs-first` or `group-directories-first` | boolean | yes | yes/no | `--group-directories-first` |
-| `time-style` | string | relative | default/iso/long-iso/full-iso/relative | `--time-style` |
-| `color` | string | auto | auto/always/never | `--color` |
+| `time-style` | **string** | relative | default/iso/long-iso/full-iso/relative | `--time-style` |
+| `color` | **string** | auto | auto/always/never | `--color` |
+
+**Note:** Boolean options accept `yes`/`no`, but string options require specific values (not `yes`/`no`).
 
 ## Comparison with Oh My Zsh Plugin
 
