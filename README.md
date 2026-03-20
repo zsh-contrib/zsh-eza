@@ -1,18 +1,26 @@
 # zsh-eza
 
-A Zsh plugin for [eza](https://github.com/eza-community/eza) with Catppuccin and Rose Pine theming, smart defaults, and full alias support.
+eza for Zsh — Catppuccin and Rose Pine theming, smart defaults, and full alias support.
 
-## Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- 7 bundled themes with auto light/dark detection
-- Smart defaults that work without any configuration
-- Full Oh My Zsh eza plugin alias compatibility
-- Theme synchronization with TMUX and macOS appearance
-- Configurable via environment variables and zstyle
+Drop `ls` and never look back. `zsh-eza` wraps [eza](https://github.com/eza-community/eza) with a curated set of aliases, automatic light/dark theme detection, and full Oh My Zsh eza plugin compatibility — so you get beautiful file listings from the moment the plugin loads.
 
 ## Requirements
 
-- [eza](https://github.com/eza-community/eza) - A modern replacement for ls
+- [eza](https://github.com/eza-community/eza) (`eza`)
+
+**macOS (Homebrew):**
+
+```bash
+brew install eza
+```
+
+**Nix:**
+
+```bash
+nix profile install nixpkgs#eza
+```
 
 ## Installation
 
@@ -51,96 +59,75 @@ source ~/.zsh/plugins/zsh-eza/zsh-eza.plugin.zsh
 | `lsd` | `eza -la --tree --level=2` | Tree view of all files (2 levels) |
 | `lsdl` | `eza -lDa --tree --level=2` | Tree view of all directories (2 levels) |
 
-### Default Options
-
-All aliases include these defaults:
-
-- `--group-directories-first` - Directories listed first
-- `--color=auto` - Colored output
-- `--icons=auto` - Icons for file types
-- `--git` - Git status indicators
-- `-g` - Show group ownership
-- `--time-style=relative` - Relative timestamps
+All aliases include `--group-directories-first`, `--color=auto`, `--icons=auto`, `--git`, `-g`, and `--time-style=relative`.
 
 ## Themes
 
 ### Available Themes
 
 **Catppuccin** (warm, cozy colors)
-- `catppuccin-mocha` - Dark theme (high contrast)
-- `catppuccin-latte` - Light theme (soft and creamy)
-- `catppuccin-macchiato` - Dark variant (medium contrast)
-- `catppuccin-frappe` - Dark variant (cool tones)
+
+- `catppuccin-mocha` — dark, high contrast
+- `catppuccin-latte` — light, soft and creamy
+- `catppuccin-macchiato` — dark, medium contrast
+- `catppuccin-frappe` — dark, cool tones
 
 **Rose Pine** (elegant, natural tones)
-- `rose-pine` - Dark theme (rich, earthy)
-- `rose-pine-dawn` - Light theme (gentle pastels)
-- `rose-pine-moon` - Dark variant (muted colors)
+
+- `rose-pine` — dark, rich and earthy
+- `rose-pine-dawn` — light, gentle pastels
+- `rose-pine-moon` — dark, muted colors
 
 ### Theme Commands
 
 ```zsh
-# List available themes
-eza-themes-list
-
-# Switch to a specific theme
+eza-themes-list          # list available themes
 eza-theme catppuccin-mocha
 eza-theme rose-pine-dawn
 ```
 
 ### Auto Theme Detection
 
-The plugin automatically detects your system appearance:
-
-1. **TMUX** - Reads `#{client_theme}` (light -> catppuccin-latte, dark -> catppuccin-mocha)
-2. **macOS** - Reads system appearance (light -> rose-pine-dawn, dark -> rose-pine)
-3. **Manual** - Set `ZSH_EZA_THEME_MODE` environment variable
-4. **Fallback** - catppuccin-mocha (dark)
+1. **TMUX** — reads `#{client_theme}` (light → catppuccin-latte, dark → catppuccin-mocha)
+2. **macOS** — reads system appearance (light → rose-pine-dawn, dark → rose-pine)
+3. **Manual** — set `ZSH_EZA_THEME_MODE` before loading
+4. **Fallback** — catppuccin-mocha
 
 ## Configuration
 
 ### Environment Variables
 
-Set these in your `.zshrc` before loading the plugin:
-
 ```zsh
-export ZSH_EZA_ENABLE_ALIASES=false    # Disable aliases (default: true)
-export ZSH_EZA_AUTO_THEME=false        # Disable auto theme detection (default: true)
-export ZSH_EZA_THEME_MODE=light        # Options: auto, light, dark, or a specific theme name
+export ZSH_EZA_ENABLE_ALIASES=false    # disable aliases (default: true)
+export ZSH_EZA_AUTO_THEME=false        # disable auto theme detection (default: true)
+export ZSH_EZA_THEME_MODE=light        # auto, light, dark, or a theme name
 ```
 
-### zstyle Configuration
+### zstyle
 
 ```zsh
-# Boolean options (yes/no)
-zstyle ':zsh-eza' 'show-group' yes        # Show group information (default: yes)
-zstyle ':zsh-eza' 'header' yes            # Show header row (default: no)
-zstyle ':zsh-eza' 'git-status' yes        # Show git status (default: yes)
-zstyle ':zsh-eza' 'dirs-first' yes        # Group directories first (default: yes)
-
-# String options
+zstyle ':zsh-eza' 'show-group' yes        # show group information (default: yes)
+zstyle ':zsh-eza' 'header' yes            # show header row (default: no)
+zstyle ':zsh-eza' 'git-status' yes        # show git status (default: yes)
+zstyle ':zsh-eza' 'dirs-first' yes        # group directories first (default: yes)
 zstyle ':zsh-eza' 'icons' always          # auto/always/never (default: auto)
-zstyle ':zsh-eza' 'time-style' relative   # default/iso/long-iso/full-iso/relative (default: relative)
+zstyle ':zsh-eza' 'time-style' relative   # default/iso/long-iso/full-iso/relative
 zstyle ':zsh-eza' 'color' auto            # auto/always/never (default: auto)
 ```
 
-## Directory Structure
+## The zsh-contrib Ecosystem
 
-```
-zsh-eza/
-├── zsh-eza.plugin.zsh   # Main entry point
-├── themes/               # Bundled eza themes
-│   ├── catppuccin-mocha/
-│   ├── catppuccin-latte/
-│   ├── catppuccin-macchiato/
-│   ├── catppuccin-frappe/
-│   ├── rose-pine/
-│   ├── rose-pine-dawn/
-│   └── rose-pine-moon/
-├── README.md
-└── LICENSE
-```
+| Repo | What it provides |
+|------|-----------------|
+| [zsh-aws](https://github.com/zsh-contrib/zsh-aws) | AWS credential management with aws-vault and tmux |
+| **zsh-eza** ← you are here | eza with Catppuccin and Rose Pine theming |
+| [zsh-fzf](https://github.com/zsh-contrib/zsh-fzf) | fzf with Catppuccin and Rose Pine theming |
+| [zsh-op](https://github.com/zsh-contrib/zsh-op) | 1Password CLI with secure caching and SSH key management |
+| [zsh-tmux](https://github.com/zsh-contrib/zsh-tmux) | Automatic tmux window title management |
+| [zsh-vivid](https://github.com/zsh-contrib/zsh-vivid) | vivid LS_COLORS generation with theme support |
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+[MIT](LICENSE) — Copyright (c) 2025 zsh-contrib
+
+<!-- markdownlint-disable-file MD013 -->
