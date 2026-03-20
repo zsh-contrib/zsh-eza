@@ -2,7 +2,7 @@
 
 eza for Zsh — Catppuccin and Rose Pine theming, smart defaults, and full alias support.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![test](https://github.com/zsh-contrib/zsh-eza/actions/workflows/test.yml/badge.svg)](https://github.com/zsh-contrib/zsh-eza/actions/workflows/test.yml)
 
 Drop `ls` and never look back. `zsh-eza` wraps [eza](https://github.com/eza-community/eza) with a curated set of aliases, automatic light/dark theme detection, and full Oh My Zsh eza plugin compatibility — so you get beautiful file listings from the moment the plugin loads.
 
