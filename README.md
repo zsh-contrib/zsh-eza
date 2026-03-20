@@ -1,6 +1,6 @@
 # zsh-eza
 
-eza for Zsh — Catppuccin and Rose Pine theming, smart defaults, and full alias support.
+> eza for Zsh — Catppuccin and Rose Pine theming, smart defaults, and full alias support.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![test](https://github.com/zsh-contrib/zsh-eza/actions/workflows/test.yml/badge.svg)](https://github.com/zsh-contrib/zsh-eza/actions/workflows/test.yml)
 
