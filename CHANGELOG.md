@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/zsh-contrib/zsh-eza/compare/v0.0.2...v0.0.3) (2026-11-07)
+
+
+### Bug Fixes
+
+* **ci:** merge with the App token so main gets its CI run ([#38](https://github.com/zsh-contrib/zsh-eza/issues/38)) ([cca950d](https://github.com/zsh-contrib/zsh-eza/commit/cca950dbbd698ac2a1ab87d08ffcfff7e5b6eaad))
+
 ## [0.0.2](https://github.com/zsh-contrib/zsh-eza/compare/v0.0.1...v0.0.2) (2026-05-04)
 
 
