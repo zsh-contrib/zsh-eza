@@ -145,6 +145,15 @@ fi
 unfunction _alias_eza
 
 # Theme configuration
+# An EZA_THEME you set yourself is "pinned": it wins over macOS appearance
+# detection (tmux detection still applies). A value merely inherited from a
+# parent shell's plugin load is not pinned, so nested shells keep following
+# the system appearance.
+typeset -g _zsh_eza_pinned=0
+if [[ -n "$EZA_THEME" && "$EZA_THEME" != "$_ZSH_EZA_APPLIED_THEME" ]]; then
+    _zsh_eza_pinned=1
+fi
+
 export EZA_THEME="${EZA_THEME:-catppuccin-mocha}"
 export EZA_THEME_DARK="${EZA_THEME_DARK:-catppuccin-mocha}"
 export EZA_THEME_LIGHT="${EZA_THEME_LIGHT:-catppuccin-latte}"
@@ -162,6 +171,9 @@ _zsh_eza_theme_dir() {
 
 # Print "light" or "dark" from the tmux client or macOS appearance.
 # Prints nothing when no signal is available.
+#
+# Arguments:
+#   $1 - (optional) "no-macos" to skip the macOS appearance check
 _zsh_eza_detect_mode() {
     if [[ -n "$TMUX" ]] && (( $+commands[tmux] )); then
         local client_theme
@@ -172,7 +184,7 @@ _zsh_eza_detect_mode() {
         fi
     fi
 
-    if [[ "$OSTYPE" == darwin* ]] && (( $+commands[defaults] )); then
+    if [[ "$1" != "no-macos" && "$OSTYPE" == darwin* ]] && (( $+commands[defaults] )); then
         # AppleInterfaceStyle exists only in dark mode
         if defaults read -g AppleInterfaceStyle &>/dev/null; then
             print dark
@@ -190,7 +202,12 @@ _zsh_eza_resolve_theme() {
         auto)
             local mode=""
             if [[ "$ZSH_EZA_AUTO_THEME" == "true" ]]; then
-                mode="$(_zsh_eza_detect_mode)"
+                # A pinned EZA_THEME wins over macOS appearance, but not over tmux
+                if (( _zsh_eza_pinned )); then
+                    mode="$(_zsh_eza_detect_mode no-macos)"
+                else
+                    mode="$(_zsh_eza_detect_mode)"
+                fi
             fi
             case "$mode" in
                 light) print -r -- "$EZA_THEME_LIGHT" ;;
@@ -250,6 +267,11 @@ eza-theme() {
 
 # ZSH_EZA_THEME_MODE: auto, light, dark, or a theme name
 _zsh_eza_apply_theme "$(_zsh_eza_resolve_theme)"
+
+# Remember what was auto-applied so child shells can tell it from a pin
+if (( ! _zsh_eza_pinned )); then
+    export _ZSH_EZA_APPLIED_THEME="$EZA_THEME"
+fi
 
 if [[ "$EZA_THEME" == /* && ! -f "$EZA_THEME_DIR/theme.yml" ]]; then
     print "zsh-eza: no theme.yml found in custom theme directory: $EZA_THEME_DIR" >&2

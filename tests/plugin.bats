@@ -15,7 +15,7 @@ setup() {
 
   # Keep tests independent of the host: no tmux, no appearance detection.
   # Detection tests opt back in explicitly.
-  unset TMUX
+  unset TMUX EZA_THEME _ZSH_EZA_APPLIED_THEME
   export ZSH_EZA_AUTO_THEME=false
 }
 
@@ -266,6 +266,54 @@ _fake() {
   run env ZSH_EZA_AUTO_THEME=true PATH="$bin:$PATH" zsh -c '
     OSTYPE=darwin24.0
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-latte" ]]
+}
+
+@test "auto detection: pinned EZA_THEME wins over macOS appearance" {
+  local bin; bin="$(_fake defaults 'echo Dark')"
+  run env ZSH_EZA_AUTO_THEME=true EZA_THEME=rose-pine-dawn PATH="$bin:$PATH" zsh -c '
+    OSTYPE=darwin24.0
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "rose-pine-dawn" ]]
+}
+
+@test "auto detection: pinned EZA_THEME is still overridden by tmux" {
+  local bin; bin="$(_fake tmux 'echo light')"
+  run env TMUX=fake ZSH_EZA_AUTO_THEME=true EZA_THEME=rose-pine PATH="$bin:$PATH" zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-latte" ]]
+}
+
+@test "auto detection: theme inherited from a parent shell is not pinned" {
+  local bin; bin="$(_fake defaults 'exit 1')"
+  run env ZSH_EZA_AUTO_THEME=true EZA_THEME=catppuccin-mocha \
+    _ZSH_EZA_APPLIED_THEME=catppuccin-mocha PATH="$bin:$PATH" zsh -c '
+    OSTYPE=darwin24.0
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-latte" ]]
+}
+
+@test "auto detection: a pin survives into a nested shell" {
+  local bin; bin="$(_fake defaults 'exit 1')"
+  run env ZSH_EZA_AUTO_THEME=true EZA_THEME=rose-pine PATH="$bin:$PATH" zsh -c '
+    OSTYPE=darwin24.0
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    zsh -c "OSTYPE=darwin24.0; source \"\$PLUGIN_DIR/zsh-eza.plugin.zsh\"; echo \$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "rose-pine" ]]
+}
+
+@test "auto detection: auto-applied theme follows appearance in a nested shell" {
+  local bin; bin="$(_fake defaults 'echo Dark')"
+  run env ZSH_EZA_AUTO_THEME=true PATH="$bin:$PATH" zsh -c '
+    OSTYPE=darwin24.0
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    printf "#!/bin/sh\nexit 1\n" > "'"$bin"'/defaults"
+    zsh -c "OSTYPE=darwin24.0; source \"\$PLUGIN_DIR/zsh-eza.plugin.zsh\"; echo \$EZA_THEME"'
   rm -rf "$bin"
   [[ "$output" == "catppuccin-latte" ]]
 }
