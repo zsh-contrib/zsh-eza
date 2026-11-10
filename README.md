@@ -123,7 +123,7 @@ On load, the plugin picks `EZA_THEME_DARK` or `EZA_THEME_LIGHT` (defaults: `catp
 
 1. **Manual** — `ZSH_EZA_THEME_MODE` set to `light`, `dark`, or a theme name
 2. **TMUX** — reads `#{client_theme}`
-3. **macOS** — reads the system appearance
+3. **macOS** — reads the system appearance, unless you set `EZA_THEME` yourself (a pinned `EZA_THEME` wins over macOS, but not over tmux)
 4. **Fallback** — `EZA_THEME` (default `catppuccin-mocha`)
 
 Set `ZSH_EZA_AUTO_THEME=false` to skip steps 2 and 3. Use `eza-theme` to switch themes in the current shell afterwards.
