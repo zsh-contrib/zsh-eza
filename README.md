@@ -81,14 +81,16 @@ All aliases include `--group-directories-first`, `--color=auto`, `--icons=auto`,
 ### Theme Commands
 
 ```zsh
-eza-themes-list          # list available themes
+eza-themes-list          # list available themes (* marks the active one)
+eza-theme                # print the active theme
 eza-theme catppuccin-mocha
 eza-theme rose-pine-dawn
+eza-theme "$HOME/.config/eza/themes/my-theme"   # custom theme directory
 ```
 
 ### Custom Themes
 
-`EZA_THEME_DARK`, `EZA_THEME_LIGHT` and `EZA_THEME` also accept an absolute path to a directory containing your own `theme.yml`, so it survives plugin updates. Inside tmux the theme is chosen from `EZA_THEME_DARK` / `EZA_THEME_LIGHT` (overriding `EZA_THEME`), so set those:
+`EZA_THEME_DARK`, `EZA_THEME_LIGHT` and `EZA_THEME` also accept an absolute path to a directory containing your own `theme.yml`, so it survives plugin updates. With auto detection (the default) the theme is chosen from `EZA_THEME_DARK` / `EZA_THEME_LIGHT`, so set those:
 
 ```zsh
 export EZA_THEME_DARK="$HOME/.config/eza/themes/my-dark"
@@ -99,10 +101,14 @@ See the bundled [`themes/*/theme.yml`](themes) files for a template and the [eza
 
 ### Auto Theme Detection
 
-1. **TMUX** — reads `#{client_theme}` (light → catppuccin-latte, dark → catppuccin-mocha)
-2. **macOS** — reads system appearance (light → rose-pine-dawn, dark → rose-pine)
-3. **Manual** — set `ZSH_EZA_THEME_MODE` before loading
-4. **Fallback** — catppuccin-mocha
+On load, the plugin picks `EZA_THEME_DARK` or `EZA_THEME_LIGHT` (defaults: `catppuccin-mocha` / `catppuccin-latte`) using the first signal available:
+
+1. **Manual** — `ZSH_EZA_THEME_MODE` set to `light`, `dark`, or a theme name
+2. **TMUX** — reads `#{client_theme}`
+3. **macOS** — reads the system appearance
+4. **Fallback** — `EZA_THEME` (default `catppuccin-mocha`)
+
+Set `ZSH_EZA_AUTO_THEME=false` to skip steps 2 and 3. Use `eza-theme` to switch themes in the current shell afterwards.
 
 ## Configuration
 
