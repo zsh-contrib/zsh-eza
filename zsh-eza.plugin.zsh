@@ -113,9 +113,14 @@ _alias_eza() {
 }
 
 # Create all aliases (Oh My Zsh eza plugin compatibility)
-if [[ "$ZSH_EZA_ENABLE_ALIASES" == "true" ]]; then
+# Aliases are for interactive use only: non-interactive shells (scripts,
+# `zsh -c`, anything sourcing this from .zshenv) keep the real commands.
+if [[ "$ZSH_EZA_ENABLE_ALIASES" == "true" && -o interactive ]]; then
     # Basic listing aliases
-    _alias_eza ls ""                              # Just eza with default options
+    # `ls` can be left alone: zstyle ':zsh-eza' 'alias-ls' no
+    if zstyle -T ':zsh-eza' 'alias-ls'; then
+        _alias_eza ls ""                          # Just eza with default options
+    fi
     _alias_eza la "a"                             # All files including hidden
     _alias_eza ll "l"                             # Long format
 
@@ -129,7 +134,10 @@ if [[ "$ZSH_EZA_ENABLE_ALIASES" == "true" ]]; then
     _alias_eza lT "l" "--sort=modified"           # Long format, sorted by modification time
 
     # Tree views
-    _alias_eza lsd "la" "--tree --level=2"        # Tree view of all files, 2 levels deep
+    # Don't shadow the lsd (LSDeluxe) binary if it is installed
+    if (( ! $+commands[lsd] )); then
+        _alias_eza lsd "la" "--tree --level=2"    # Tree view of all files, 2 levels deep
+    fi
     _alias_eza lsdl "lDa" "--tree --level=2"      # Tree view of all directories, 2 levels deep
 fi
 

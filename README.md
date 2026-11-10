@@ -61,6 +61,24 @@ source ~/.zsh/plugins/zsh-eza/zsh-eza.plugin.zsh
 
 All aliases include `--group-directories-first`, `--color=auto`, `--icons=auto`, `--git`, `-g`, and `--time-style=relative`.
 
+Aliases are only defined in interactive shells, so scripts and `zsh -c` keep the real commands. The `lsd` alias is skipped when the [`lsd`](https://github.com/lsd-rs/lsd) binary is installed.
+
+### `ls` vs `eza` flags
+
+`ls` is aliased to `eza`, but a few common `ls` flags mean something different in eza:
+
+| Flag | `ls` | `eza` |
+|------|------|-------|
+| `-h` | human-readable sizes | add a header row (sizes are already human-readable) |
+| `-t` | sort by modified time | selects a timestamp field and requires a value (`ls -lt` errors) — use `lT` or `--sort=modified` |
+| `-S` | sort by size | list allocated block size — use `lS` or `--sort=size` |
+
+If that gets in the way, keep the other aliases and leave `ls` alone:
+
+```zsh
+zstyle ':zsh-eza' 'alias-ls' no
+```
+
 ## Themes
 
 ### Available Themes
@@ -130,6 +148,7 @@ zstyle ':zsh-eza' 'dirs-first' yes        # group directories first (default: ye
 zstyle ':zsh-eza' 'icons' always          # auto/always/never (default: auto)
 zstyle ':zsh-eza' 'time-style' relative   # default/iso/long-iso/full-iso/relative
 zstyle ':zsh-eza' 'color' auto            # auto/always/never (default: auto)
+zstyle ':zsh-eza' 'alias-ls' yes          # alias ls to eza (default: yes)
 ```
 
 ## The zsh-contrib Ecosystem
