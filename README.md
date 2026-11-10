@@ -86,6 +86,17 @@ eza-theme catppuccin-mocha
 eza-theme rose-pine-dawn
 ```
 
+### Custom Themes
+
+`EZA_THEME_DARK`, `EZA_THEME_LIGHT` and `EZA_THEME` also accept an absolute path to a directory containing your own `theme.yml`, so it survives plugin updates. Inside tmux the theme is chosen from `EZA_THEME_DARK` / `EZA_THEME_LIGHT` (overriding `EZA_THEME`), so set those:
+
+```zsh
+export EZA_THEME_DARK="$HOME/.config/eza/themes/my-dark"
+export EZA_THEME_LIGHT=catppuccin-latte
+```
+
+See the bundled [`themes/*/theme.yml`](themes) files for a template and the [eza theme docs](https://github.com/eza-community/eza/blob/main/man/eza_colors-explanation.5.md) for the format.
+
 ### Auto Theme Detection
 
 1. **TMUX** — reads `#{client_theme}` (light → catppuccin-latte, dark → catppuccin-mocha)

@@ -156,3 +156,47 @@ setup() {
   [[ "$status" -eq 0 ]]
   [[ "$output" == "set" ]]
 }
+
+@test "EZA_THEME absolute path is used as the custom theme directory" {
+  local dir
+  dir="$(mktemp -d)"
+  : > "$dir/theme.yml"
+  run env -u TMUX zsh -c '
+    export EZA_THEME="$1"
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    echo "$EZA_THEME_DIR"
+    echo "$EZA_CONFIG_DIR"
+  ' _ "$dir"
+  rm -rf "$dir"
+  [[ "$status" -eq 0 ]]
+  [[ "${lines[0]}" == "$dir" ]]
+  [[ "${lines[1]}" == "$dir" ]]
+}
+
+@test "EZA_THEME absolute path without theme.yml warns" {
+  local dir
+  dir="$(mktemp -d)"
+  run env -u TMUX zsh -c '
+    export EZA_THEME="$1"
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+  ' _ "$dir"
+  rm -rf "$dir"
+  [[ "$output" == *"no theme.yml found"* ]]
+}
+
+@test "EZA_THEME_DARK absolute path is used under tmux dark mode" {
+  local dir bin
+  dir="$(mktemp -d)"
+  bin="$(mktemp -d)"
+  : > "$dir/theme.yml"
+  printf '#!/bin/sh\necho dark\n' > "$bin/tmux"
+  chmod +x "$bin/tmux"
+  run env TMUX=fake PATH="$bin:$PATH" EZA_THEME_DARK="$dir" zsh -c '
+    unset EZA_THEME
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    echo "$EZA_CONFIG_DIR"
+  '
+  rm -rf "$dir" "$bin"
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == "$dir" ]]
+}

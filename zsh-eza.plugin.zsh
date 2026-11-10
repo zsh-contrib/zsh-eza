@@ -151,7 +151,16 @@ if [[ -n "$TMUX" ]]; then
   fi
 fi
 
-export EZA_THEME_DIR="${0:A:h}/themes/$EZA_THEME"
+# EZA_THEME is either a bundled theme name or an absolute path to a custom
+# theme directory (a directory containing theme.yml).
+if [[ "$EZA_THEME" == /* ]]; then
+    export EZA_THEME_DIR="$EZA_THEME"
+    if [[ ! -f "$EZA_THEME_DIR/theme.yml" ]]; then
+        print "zsh-eza: no theme.yml found in custom theme directory: $EZA_THEME_DIR" >&2
+    fi
+else
+    export EZA_THEME_DIR="${ZSH_EZA_DIR}/themes/$EZA_THEME"
+fi
 # Load theme file
 if [[ -d "$EZA_THEME_DIR" ]]; then
     export EZA_CONFIG_DIR="$EZA_THEME_DIR"
