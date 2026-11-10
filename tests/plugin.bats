@@ -43,7 +43,7 @@ setup() {
 # ---------------------------------------------------------------------------
 
 @test "ls alias is defined by default" {
-  run zsh -c '
+  run zsh -fic '
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias ls
   '
@@ -52,7 +52,7 @@ setup() {
 }
 
 @test "ll alias includes long format flag" {
-  run zsh -c '
+  run zsh -fic '
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias ll
   '
@@ -64,7 +64,7 @@ setup() {
 }
 
 @test "la alias includes all-files flag" {
-  run zsh -c '
+  run zsh -fic '
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias la
   '
@@ -75,7 +75,7 @@ setup() {
 }
 
 @test "lS alias includes sort-by-size option" {
-  run zsh -c '
+  run zsh -fic '
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias lS
   '
@@ -84,7 +84,7 @@ setup() {
 }
 
 @test "lT alias includes sort-by-modified option" {
-  run zsh -c '
+  run zsh -fic '
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias lT
   '
@@ -93,7 +93,7 @@ setup() {
 }
 
 @test "lDD alias includes tree and level options" {
-  run zsh -c '
+  run zsh -fic '
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias lDD
   '
@@ -103,7 +103,7 @@ setup() {
 }
 
 @test "ZSH_EZA_ENABLE_ALIASES=false disables all aliases" {
-  run zsh -c '
+  run zsh -fic '
     export ZSH_EZA_ENABLE_ALIASES=false
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     alias ls 2>/dev/null && echo "defined" || echo "undefined"
@@ -321,4 +321,49 @@ _fake() {
   [[ "${#lines[@]}" -eq 7 ]]
   [[ "$output" == *"* catppuccin-mocha"* ]]
   [[ "$output" == *"  rose-pine-dawn"* ]]
+}
+
+# ---------------------------------------------------------------------------
+# Alias opt-outs and interactive-only
+# ---------------------------------------------------------------------------
+
+@test "aliases are not defined in non-interactive shells" {
+  run zsh -fc '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    alias ls 2>/dev/null && echo "defined" || echo "undefined"
+  '
+  [[ "$output" == "undefined" ]]
+}
+
+@test "zstyle alias-ls no leaves ls alone but keeps other aliases" {
+  run zsh -fic '
+    zstyle ":zsh-eza" "alias-ls" no
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    alias ls 2>/dev/null && echo "ls defined" || echo "ls undefined"
+    alias ll >/dev/null && echo "ll defined"
+  '
+  [[ "$output" == *"ls undefined"* ]]
+  [[ "$output" == *"ll defined"* ]]
+}
+
+@test "lsd alias is skipped when an lsd binary exists" {
+  local bin; bin="$(mktemp -d)"
+  printf '#!/bin/sh\n' > "$bin/lsd"; chmod +x "$bin/lsd"
+  run env PATH="$bin:$PATH" zsh -fic '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    alias lsd 2>/dev/null && echo "lsd defined" || echo "lsd undefined"
+    alias lsdl >/dev/null && echo "lsdl defined"
+  '
+  rm -rf "$bin"
+  [[ "$output" == *"lsd undefined"* ]]
+  [[ "$output" == *"lsdl defined"* ]]
+}
+
+@test "lsd alias is defined when no lsd binary exists" {
+  run zsh -fic '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    (( $+commands[lsd] )) && { echo "skip: lsd installed"; exit 0 }
+    alias lsd >/dev/null && echo "lsd defined"
+  '
+  [[ "$output" == *"lsd defined"* || "$output" == *"skip: lsd installed"* ]]
 }
