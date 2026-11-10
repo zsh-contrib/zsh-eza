@@ -6,12 +6,17 @@
 # Run: bats tests/plugin.bats
 
 export PLUGIN_DIR
-PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd -P)"
 
 setup() {
   if ! command -v eza &>/dev/null; then
     skip "eza is not installed"
   fi
+
+  # Keep tests independent of the host: no tmux, no appearance detection.
+  # Detection tests opt back in explicitly.
+  unset TMUX
+  export ZSH_EZA_AUTO_THEME=false
 }
 
 # ---------------------------------------------------------------------------
@@ -191,7 +196,7 @@ setup() {
   : > "$dir/theme.yml"
   printf '#!/bin/sh\necho dark\n' > "$bin/tmux"
   chmod +x "$bin/tmux"
-  run env TMUX=fake PATH="$bin:$PATH" EZA_THEME_DARK="$dir" zsh -c '
+  run env TMUX=fake ZSH_EZA_AUTO_THEME=true PATH="$bin:$PATH" EZA_THEME_DARK="$dir" zsh -c '
     unset EZA_THEME
     source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
     echo "$EZA_CONFIG_DIR"
@@ -199,4 +204,121 @@ setup() {
   rm -rf "$dir" "$bin"
   [[ "$status" -eq 0 ]]
   [[ "$output" == "$dir" ]]
+}
+
+# ---------------------------------------------------------------------------
+# Theme mode and auto detection
+# ---------------------------------------------------------------------------
+
+# Create a fake executable in a temp bin dir; echoes the dir. Usage: _fake name body
+_fake() {
+  local bin="${FAKE_BIN:-$(mktemp -d)}"
+  printf '#!/bin/sh\n%s\n' "$2" > "$bin/$1"
+  chmod +x "$bin/$1"
+  echo "$bin"
+}
+
+@test "ZSH_EZA_THEME_MODE=light selects EZA_THEME_LIGHT" {
+  run env ZSH_EZA_THEME_MODE=light zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  [[ "$output" == "catppuccin-latte" ]]
+}
+
+@test "ZSH_EZA_THEME_MODE=dark selects EZA_THEME_DARK" {
+  run env ZSH_EZA_THEME_MODE=dark EZA_THEME_DARK=rose-pine zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  [[ "$output" == "rose-pine" ]]
+}
+
+@test "ZSH_EZA_THEME_MODE accepts a theme name" {
+  run env ZSH_EZA_THEME_MODE=rose-pine-moon zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME $EZA_CONFIG_DIR"'
+  [[ "$output" == "rose-pine-moon $PLUGIN_DIR/themes/rose-pine-moon" ]]
+}
+
+@test "auto detection: tmux light client selects EZA_THEME_LIGHT" {
+  local bin; bin="$(_fake tmux 'echo light')"
+  run env TMUX=fake ZSH_EZA_AUTO_THEME=true PATH="$bin:$PATH" zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-latte" ]]
+}
+
+@test "auto detection: ZSH_EZA_AUTO_THEME=false ignores tmux client theme" {
+  local bin; bin="$(_fake tmux 'echo light')"
+  run env TMUX=fake ZSH_EZA_AUTO_THEME=false PATH="$bin:$PATH" zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-mocha" ]]
+}
+
+@test "auto detection: macOS dark appearance selects EZA_THEME_DARK" {
+  local bin; bin="$(_fake defaults 'echo Dark')"
+  run env ZSH_EZA_AUTO_THEME=true PATH="$bin:$PATH" zsh -c '
+    OSTYPE=darwin24.0
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-mocha" ]]
+}
+
+@test "auto detection: macOS light appearance selects EZA_THEME_LIGHT" {
+  local bin; bin="$(_fake defaults 'exit 1')"
+  run env ZSH_EZA_AUTO_THEME=true PATH="$bin:$PATH" zsh -c '
+    OSTYPE=darwin24.0
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  rm -rf "$bin"
+  [[ "$output" == "catppuccin-latte" ]]
+}
+
+@test "auto detection: no signal falls back to EZA_THEME" {
+  run env ZSH_EZA_AUTO_THEME=true EZA_THEME=rose-pine zsh -c '
+    OSTYPE=linux-gnu
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; echo "$EZA_THEME"'
+  [[ "$output" == "rose-pine" ]]
+}
+
+# ---------------------------------------------------------------------------
+# eza-theme / eza-themes-list
+# ---------------------------------------------------------------------------
+
+@test "eza-theme switches theme and updates EZA_CONFIG_DIR" {
+  run zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    eza-theme rose-pine-dawn
+    echo "$EZA_THEME $EZA_CONFIG_DIR"'
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == "rose-pine-dawn $PLUGIN_DIR/themes/rose-pine-dawn" ]]
+}
+
+@test "eza-theme accepts a custom theme directory" {
+  local dir; dir="$(mktemp -d)"; : > "$dir/theme.yml"
+  run zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    eza-theme "$1"
+    echo "$EZA_CONFIG_DIR"' _ "$dir"
+  rm -rf "$dir"
+  [[ "$output" == "$dir" ]]
+}
+
+@test "eza-theme with unknown theme fails and keeps current theme" {
+  run zsh -c '
+    source "$PLUGIN_DIR/zsh-eza.plugin.zsh"
+    eza-theme nope 2>&1
+    rc=$?
+    echo "rc=$rc theme=$EZA_THEME"'
+  [[ "$output" == *"no theme.yml found for 'nope'"* ]]
+  [[ "$output" == *"rc=1 theme=catppuccin-mocha"* ]]
+}
+
+@test "eza-theme with no argument prints the active theme" {
+  run zsh -c 'source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; eza-theme'
+  [[ "$output" == "catppuccin-mocha" ]]
+}
+
+@test "eza-themes-list lists bundled themes and marks the active one" {
+  run zsh -c 'source "$PLUGIN_DIR/zsh-eza.plugin.zsh"; eza-themes-list'
+  [[ "$status" -eq 0 ]]
+  [[ "${#lines[@]}" -eq 7 ]]
+  [[ "$output" == *"* catppuccin-mocha"* ]]
+  [[ "$output" == *"  rose-pine-dawn"* ]]
 }

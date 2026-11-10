@@ -141,27 +141,108 @@ export EZA_THEME="${EZA_THEME:-catppuccin-mocha}"
 export EZA_THEME_DARK="${EZA_THEME_DARK:-catppuccin-mocha}"
 export EZA_THEME_LIGHT="${EZA_THEME_LIGHT:-catppuccin-latte}"
 
-if [[ -n "$TMUX" ]]; then
-  TMUX_CLIENT_THEME="$(tmux display -p "#{client_theme}")"
+# Print the theme directory for a theme name or absolute path
+_zsh_eza_theme_dir() {
+    local theme="$1"
 
-  if [[ "$TMUX_CLIENT_THEME" == "light" ]]; then
-    export EZA_THEME="$EZA_THEME_LIGHT"
-  else
-    export EZA_THEME="$EZA_THEME_DARK"
-  fi
-fi
-
-# EZA_THEME is either a bundled theme name or an absolute path to a custom
-# theme directory (a directory containing theme.yml).
-if [[ "$EZA_THEME" == /* ]]; then
-    export EZA_THEME_DIR="$EZA_THEME"
-    if [[ ! -f "$EZA_THEME_DIR/theme.yml" ]]; then
-        print "zsh-eza: no theme.yml found in custom theme directory: $EZA_THEME_DIR" >&2
+    if [[ "$theme" == /* ]]; then
+        print -r -- "$theme"
+    else
+        print -r -- "${ZSH_EZA_DIR}/themes/${theme}"
     fi
-else
-    export EZA_THEME_DIR="${ZSH_EZA_DIR}/themes/$EZA_THEME"
-fi
-# Load theme file
-if [[ -d "$EZA_THEME_DIR" ]]; then
-    export EZA_CONFIG_DIR="$EZA_THEME_DIR"
+}
+
+# Print "light" or "dark" from the tmux client or macOS appearance.
+# Prints nothing when no signal is available.
+_zsh_eza_detect_mode() {
+    if [[ -n "$TMUX" ]] && (( $+commands[tmux] )); then
+        local client_theme
+        client_theme="$(tmux display -p "#{client_theme}" 2>/dev/null)"
+        if [[ "$client_theme" == (light|dark) ]]; then
+            print -r -- "$client_theme"
+            return
+        fi
+    fi
+
+    if [[ "$OSTYPE" == darwin* ]] && (( $+commands[defaults] )); then
+        # AppleInterfaceStyle exists only in dark mode
+        if defaults read -g AppleInterfaceStyle &>/dev/null; then
+            print dark
+        else
+            print light
+        fi
+    fi
+}
+
+# Print the theme to use, honouring ZSH_EZA_THEME_MODE and ZSH_EZA_AUTO_THEME
+_zsh_eza_resolve_theme() {
+    case "$ZSH_EZA_THEME_MODE" in
+        light) print -r -- "$EZA_THEME_LIGHT" ;;
+        dark)  print -r -- "$EZA_THEME_DARK" ;;
+        auto)
+            local mode=""
+            if [[ "$ZSH_EZA_AUTO_THEME" == "true" ]]; then
+                mode="$(_zsh_eza_detect_mode)"
+            fi
+            case "$mode" in
+                light) print -r -- "$EZA_THEME_LIGHT" ;;
+                dark)  print -r -- "$EZA_THEME_DARK" ;;
+                *)     print -r -- "$EZA_THEME" ;;
+            esac
+            ;;
+        *) print -r -- "$ZSH_EZA_THEME_MODE" ;;  # explicit theme name
+    esac
+}
+
+# Point eza at a theme (name or absolute path) for the current shell
+_zsh_eza_apply_theme() {
+    local theme="$1"
+    local dir
+    dir="$(_zsh_eza_theme_dir "$theme")"
+
+    export EZA_THEME="$theme"
+    export EZA_THEME_DIR="$dir"
+    if [[ -d "$dir" ]]; then
+        export EZA_CONFIG_DIR="$dir"
+    fi
+}
+
+# List bundled themes, marking the active one
+eza-themes-list() {
+    local dir name
+    for dir in "$ZSH_EZA_DIR"/themes/*(/N); do
+        name="${dir:t}"
+        if [[ "$name" == "$EZA_THEME" ]]; then
+            print "* $name"
+        else
+            print "  $name"
+        fi
+    done
+}
+
+# Switch theme in the current shell. With no argument, print the active theme.
+eza-theme() {
+    if (( $# == 0 )); then
+        print -r -- "$EZA_THEME"
+        return 0
+    fi
+
+    local theme="$1"
+    local dir
+    dir="$(_zsh_eza_theme_dir "$theme")"
+
+    if [[ ! -f "$dir/theme.yml" ]]; then
+        print "eza-theme: no theme.yml found for '$theme' (looked in $dir)" >&2
+        print "Run eza-themes-list to see available themes." >&2
+        return 1
+    fi
+
+    _zsh_eza_apply_theme "$theme"
+}
+
+# ZSH_EZA_THEME_MODE: auto, light, dark, or a theme name
+_zsh_eza_apply_theme "$(_zsh_eza_resolve_theme)"
+
+if [[ "$EZA_THEME" == /* && ! -f "$EZA_THEME_DIR/theme.yml" ]]; then
+    print "zsh-eza: no theme.yml found in custom theme directory: $EZA_THEME_DIR" >&2
 fi
