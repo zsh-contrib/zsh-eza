@@ -219,7 +219,20 @@ _zsh_eza_resolve_theme() {
     esac
 }
 
-# Point eza at a theme (name or absolute path) for the current shell
+# Share the active theme with the tmux server, so that what tmux starts
+# (run-shell, popups) does not keep the theme of the shell that started the
+# server, which could only look at the macOS appearance.
+_zsh_eza_sync_tmux() {
+    [[ -n "$TMUX" ]] && (( $+commands[tmux] )) || return 0
+    local var
+    for var in EZA_THEME EZA_THEME_DIR EZA_CONFIG_DIR; do
+        [[ -n "${(P)var}" ]] && tmux set-environment -g "$var" "${(P)var}" &>/dev/null
+    done
+    return 0
+}
+
+# Point eza at a theme (name or absolute path) for the current shell, and
+# share it with tmux
 _zsh_eza_apply_theme() {
     local theme="$1"
     local dir
@@ -230,6 +243,8 @@ _zsh_eza_apply_theme() {
     if [[ -d "$dir" ]]; then
         export EZA_CONFIG_DIR="$dir"
     fi
+
+    _zsh_eza_sync_tmux
 }
 
 # List bundled themes, marking the active one
