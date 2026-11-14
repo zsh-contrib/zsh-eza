@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/zsh-contrib/zsh-eza/compare/v0.1.0...v0.1.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* share the theme with the tmux server environment ([a8aea46](https://github.com/zsh-contrib/zsh-eza/commit/a8aea464f14fd18e886628640f00c96d07a42c11))
+
 ## [0.1.0](https://github.com/zsh-contrib/zsh-eza/compare/v0.0.3...v0.1.0) (2026-11-10)
 
 
